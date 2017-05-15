@@ -11,5 +11,5 @@
 
   {maintainers, ["Jonathan Almeida"]},
   {licenses, ["MIT"]},
-  {links, [{"Github", "https://github.com/jonalmeida/ws"]}
+  {links, [{"Github", "https://github.com/jonalmeida/ws"}]}
  ]}.
