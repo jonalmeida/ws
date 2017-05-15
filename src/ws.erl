@@ -14,7 +14,7 @@
 %%====================================================================
 %% API functions
 %%====================================================================
--spec connect(string()|atom(), port()) -> client()|net_error().
+-spec connect(string()|atom(), number()) -> client()|net_error().
 connect(Url, Port) ->
   connect(#ws_url{host=Url, port=Port}).
 
@@ -36,11 +36,11 @@ connect(#ws_url{host=Host, path=Path, port=Port}) ->
       E
   end.
 
--spec send(client(), binary()) -> ok | {error, closed|net_error()}.
+-spec send(client(), binary()|[string()]) -> ok | {error, closed|net_error()}.
 send(Client, Data) ->
   case Client#client.socket of
     undefined ->
-      connect(Client#client.raw_path);
+      {error, "No connection has been made. Try using connect/1 first."};
     Socket ->
       gen_tcp:send(Socket, Data)
   end.
@@ -49,7 +49,7 @@ send(Client, Data) ->
 request(Url) ->
   request(get, Url, 80).
 
--spec request(atom(), string()|atom(), port()) -> binary().
+-spec request(atom(), string()|atom(), number()) -> binary().
 request(get, Url, Port) ->
   ParsedUrl = ws_url:parse_url(Url),
 %  Header = ["GET /ip HTTP/1.0\r\n",

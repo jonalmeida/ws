@@ -90,7 +90,7 @@ parse_header(<<"HTTP/1.1 ", Status/binary>>) ->
   case binary:split(Status, <<" ">>) of
     [Code, Reason] ->
       {"HTTP/1.1", binary_to_list(Code), binary_to_list(Reason)};
-    Other ->
+    [Other] ->
       {"HTTP/1.1", binary_to_list(Other)}
   end;
 parse_header(Header) ->
