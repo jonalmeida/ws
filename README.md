@@ -1,7 +1,6 @@
-ws
-=====
+# ws
+An RFC 6455 implementation of WebSockets in Erlang
 
-An OTP library
 
 Build
 -----
