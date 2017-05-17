@@ -24,14 +24,21 @@ connect(Url) when is_list(Url) ->
 connect(Url) when is_atom(Url) ->
   case gen_tcp:connect(Url, 80, ?DEFAULT_OPTIONS) of
     {ok, Socket} ->
-      #client{host=Url, socket=Socket};
+      #client{host=Url,
+              socket=Socket,
+              raw_path=ws_util:atom_to_binary(Url)};
     {error, _Reason}=E ->
       E
   end;
-connect(#ws_url{host=Host, path=Path, port=Port}) ->
+connect(#ws_url{host=Host, path=Path}=Url) ->
+  Port = Url#ws_url.port,
   case gen_tcp:connect(Host, Port, ?DEFAULT_OPTIONS) of
     {ok, Socket} ->
-      #client{host=Host, path=Path, port=Port, socket=Socket};
+      #client{host=Host,
+              path=Path,
+              port=Port,
+              socket=Socket,
+              raw_path=Url#ws_url.raw_path};
     {error, _Reason}=E ->
       E
   end.
@@ -51,7 +58,6 @@ request(Url) ->
 
 -spec request(atom(), string()|atom(), number()) -> binary().
 request(get, Url, Port) ->
-  ParsedUrl = ws_url:parse_url(Url),
 %  Header = ["GET /ip HTTP/1.0\r\n",
 %     %"Connection: keep-alive\r\n",
 %     %"Keep-Alive: 300\r\n",
@@ -63,13 +69,22 @@ request(get, Url, Port) ->
 %     "Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n",
 %     "Sec-WebSocket-Key:dGhlIHNhbXBsZSBub25jZQ==\r\n",
 %     "Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"],
-
+  ParsedUrl = ws_url:parse_url(Url),
   Headers = ws_header:build_headers([{"Host", ParsedUrl#ws_url.host},
                                      {"GET", ParsedUrl#ws_url.path}]),
+  SanitizedHeaders = ws_header:sanitize(Headers),
   Client = connect(Url, Port),
-  send(Client, Headers),
-  {ok, Resp} = gen_tcp:recv(Client#client.socket, 0),
-  ws_header:parse(Resp).
+  send(Client, SanitizedHeaders),
+  {ok, RawResp} = gen_tcp:recv(Client#client.socket, 0),
+  RespHeaders = ws_header:parse(RawResp),
+  AcceptKey = ws_header:get_header(RespHeaders, "Sec-WebSocket-Accept"),
+  SecKey = ws_header:get_header(Headers, "Sec-WebSocket-Key"),
+  case ws_header:check_accept(SecKey, AcceptKey) of
+    true ->
+      Client#client{key=SecKey};
+    false ->
+      error(key_auth_fail)
+  end.
 
 test() ->
   request(get, localhost, 8080).

@@ -1,6 +1,7 @@
 -module(ws_header).
 -export([get_header/1,
-         sanitize_header/1,
+         get_header/2,
+         sanitize/1,
          build_headers/1,
          default_headers/0,
          check_accept/2,
@@ -11,8 +12,7 @@
 
 -spec build_headers([{string(), string()}]) -> [string()].
 build_headers(L) ->
-  Full = lists:append(default_headers(), L),
-  sanitize_header(Full).
+  lists:append(default_headers(), L).
   %Sanitized = sanitize_header(Full),
   %lists:flatten(Sanitized, ["\r\n"]). % Trailing '\r\n' as per RFC 2616 spec
 
@@ -25,8 +25,8 @@ default_headers() ->
    get_header(key),
    get_header(extensions)].
 
--spec sanitize_header([{string(), string()}]) -> [string()].
-sanitize_header(L) ->
+-spec sanitize([{string(), string()}]) -> [string()].
+sanitize(L) ->
   sanitize_header(L, [], []).
 
 -spec sanitize_header([{string(), string()}], [string()], [string()]) -> [string()].
@@ -49,15 +49,26 @@ get_header(extensions) ->
 get_header(upgrade) ->
   {"Upgrade", "websocket"};
 get_header(key) ->
-  {"Sec-WebSocket-Key", generate_key()};
+  {"Sec-WebSocket-Key", binary_to_list(generate_key())};
 get_header({K, V}) when is_atom(K), is_atom(V) ->
   {atom_to_list(K), atom_to_list(V)}.
+
+-spec get_header(list(), string()) -> string().
+get_header(Headers, Key) ->
+  case lists:keysearch(Key, 1, Headers) of
+    {value, {Key, Value}} ->
+      Value;
+    {value, {Key, Code, Reason}} ->
+      {Code, Reason};
+    false ->
+      {error, no_val}
+  end.
 
 -spec check_accept(string(), string()) -> boolean().
 check_accept(Key, Accept) ->
   Encoded = crypto:hash(sha, Key++?WS_GUID),
   Hashed = base64:encode(Encoded),
-  Accept =:= Hashed.
+  Accept =:= binary_to_list(Hashed).
 
 -spec generate_key() -> binary().
 generate_key() ->
@@ -102,3 +113,4 @@ parse_header(Header) ->
     [Header] ->
       {binary_to_list(Header)}
   end.
+
