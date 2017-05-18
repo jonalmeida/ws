@@ -2,7 +2,7 @@
 -export([get_header/1,
          get_header/2,
          sanitize/1,
-         build_headers/1,
+         build/1,
          default_headers/0,
          check_accept/2,
          rand_bits/1,
@@ -10,8 +10,8 @@
 
 -include("ws.hrl").
 
--spec build_headers([{string(), string()}]) -> [string()].
-build_headers(L) ->
+-spec build([{string(), string()}]) -> [string()].
+build(L) ->
   lists:append(default_headers(), L).
   %Sanitized = sanitize_header(Full),
   %lists:flatten(Sanitized, ["\r\n"]). % Trailing '\r\n' as per RFC 2616 spec

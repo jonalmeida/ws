@@ -58,32 +58,25 @@ request(Url) ->
 
 -spec request(atom(), string()|atom(), number()) -> binary().
 request(get, Url, Port) ->
-%  Header = ["GET /ip HTTP/1.0\r\n",
-%     %"Connection: keep-alive\r\n",
-%     %"Keep-Alive: 300\r\n",
-%     "Host: ", "Hostname", "\r\n",
-%     "Upgrade: websocket\r\n",
-%     "Connection: Upgrade\r\n",
-%     "Sec-WebSocket-Version: 13\r\n",
-%     "Sec-WebSocket-Protocol: echo-protocol\r\n",
-%     "Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\n",
-%     "Sec-WebSocket-Key:dGhlIHNhbXBsZSBub25jZQ==\r\n",
-%     "Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=\r\n\r\n"],
   ParsedUrl = ws_url:parse_url(Url),
-  Headers = ws_header:build_headers([{"Host", ParsedUrl#ws_url.host},
-                                     {"GET", ParsedUrl#ws_url.path}]),
+  Headers = ws_header:build([{"Host", ParsedUrl#ws_url.host},
+                             {"GET", ParsedUrl#ws_url.path}]),
   SanitizedHeaders = ws_header:sanitize(Headers),
   Client = connect(Url, Port),
-  send(Client, SanitizedHeaders),
-  {ok, RawResp} = gen_tcp:recv(Client#client.socket, 0),
-  RespHeaders = ws_header:parse(RawResp),
-  AcceptKey = ws_header:get_header(RespHeaders, "Sec-WebSocket-Accept"),
-  SecKey = ws_header:get_header(Headers, "Sec-WebSocket-Key"),
-  case ws_header:check_accept(SecKey, AcceptKey) of
-    true ->
-      Client#client{key=SecKey};
-    false ->
-      error(key_auth_fail)
+  case send(Client, SanitizedHeaders) of
+    ok ->
+      {ok, RawResp} = gen_tcp:recv(Client#client.socket, 0),
+      RespHeaders   = ws_header:parse(RawResp),
+      AcceptKey     = ws_header:get_header(RespHeaders, "Sec-WebSocket-Accept"),
+      SecKey        = ws_header:get_header(Headers, "Sec-WebSocket-Key"),
+      case ws_header:check_accept(SecKey, AcceptKey) of
+        true ->
+          Client#client{key=SecKey};
+        false ->
+          error(key_auth_fail)
+      end;
+    E ->
+      E
   end.
 
 test() ->
