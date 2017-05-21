@@ -1,5 +1,11 @@
 -module(ws_util).
--export([atom_to_binary/1]).
+-export([a_to_b/1, b_to_a/1, b_to_i/1]).
 
-atom_to_binary(X) ->
-  list_to_binary(atom_to_list(X)).
+a_to_b(X) ->
+  atom_to_binary(X, utf8).
+
+b_to_a(X) ->
+  binary_to_atom(X, utf8).
+
+b_to_i(X) ->
+  binary_to_integer(X).

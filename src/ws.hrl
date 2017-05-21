@@ -1,25 +1,25 @@
--define(DEFAULT_SCHEME, "ws").
+-define(DEFAULT_SCHEME, ws).
 
 -define(WS_GUID, "258EAFA5-E914-47DA-95CA-C5AB0DC85B11").
 
 -record(ws_url, {
-          scheme=?DEFAULT_SCHEME,
-          host,
-          user,
-          password,
-          port=80,
-          path,
-          query,
-          raw_path}).
+          scheme=?DEFAULT_SCHEME :: string(),
+          host :: atom(),
+          user :: atom(),
+          password :: atom(),
+          port=80 :: number(),
+          path :: atom(),
+          query :: tuple(),
+          raw_path :: binary()}).
 
 -record(client, {
-          host,
-          path,
-          port,
-          query,
-          key,
+          host :: atom(),
+          path :: atom(),
+          port :: number(),
+          query :: tuple(),
+          key :: atom(),
           socket,
-          raw_path
+          raw_path :: binary()
          }).
 
 -type ws_url() :: #ws_url{}.

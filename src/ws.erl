@@ -6,7 +6,7 @@
 -export([connect/1,
          test/0,
          connect/2,
-         request/3,
+         request/2,
          request/1]).
 
 -define(DEFAULT_OPTIONS, [binary, {active, false}, {packet, raw}]).
@@ -22,23 +22,18 @@ connect(Url, Port) ->
 connect(Url) when is_list(Url) ->
   connect(list_to_atom(Url));
 connect(Url) when is_atom(Url) ->
-  case gen_tcp:connect(Url, 80, ?DEFAULT_OPTIONS) of
-    {ok, Socket} ->
-      #client{host=Url,
-              socket=Socket,
-              raw_path=ws_util:atom_to_binary(Url)};
-    {error, _Reason}=E ->
-      E
-  end;
-connect(#ws_url{host=Host, path=Path}=Url) ->
-  Port = Url#ws_url.port,
+  connect(Url, 80, '/', ws_util:a_to_b(Url));
+connect(#ws_url{host=Host, path=Path, port=Port, raw_path=Raw}) ->
+  connect(Host, Port, Path, Raw).
+
+connect(Host, Port, Path, Raw) ->
   case gen_tcp:connect(Host, Port, ?DEFAULT_OPTIONS) of
     {ok, Socket} ->
       #client{host=Host,
               path=Path,
               port=Port,
               socket=Socket,
-              raw_path=Url#ws_url.raw_path};
+              raw_path=Raw};
     {error, _Reason}=E ->
       E
   end.
@@ -54,15 +49,16 @@ send(Client, Data) ->
 
 -spec request(string()|atom()) -> binary().
 request(Url) ->
-  request(get, Url, 80).
+  request(get, Url).
 
--spec request(atom(), string()|atom(), number()) -> binary().
-request(get, Url, Port) ->
-  ParsedUrl = ws_url:parse_url(Url),
+-spec request(atom(), string()|atom()) -> binary().
+request(get, Url) ->
+  ParsedUrl = ws_url:parse(Url),
   Headers = ws_header:build([{"Host", ParsedUrl#ws_url.host},
                              {"GET", ParsedUrl#ws_url.path}]),
   SanitizedHeaders = ws_header:sanitize(Headers),
-  Client = connect(Url, Port),
+  io:format("~p~n", [ParsedUrl]),
+  Client = connect(ParsedUrl),
   case send(Client, SanitizedHeaders) of
     ok ->
       {ok, RawResp} = gen_tcp:recv(Client#client.socket, 0),
@@ -80,7 +76,7 @@ request(get, Url, Port) ->
   end.
 
 test() ->
-  request(get, localhost, 8080).
+  request(get, 'ws://localhost:8080').
 
 %%====================================================================
 %% Internal functions
