@@ -54,8 +54,8 @@ request(Url) ->
 -spec request(atom(), string()|atom()) -> binary().
 request(get, Url) ->
   ParsedUrl = ws_url:parse(Url),
-  Headers = ws_header:build([{"Host", ParsedUrl#ws_url.host},
-                             {"GET", ParsedUrl#ws_url.path}]),
+  Headers = ws_header:build([{"Host", atom_to_list(ParsedUrl#ws_url.host)},
+                             {"GET", atom_to_list(ParsedUrl#ws_url.path)}]),
   SanitizedHeaders = ws_header:sanitize(Headers),
   io:format("~p~n", [ParsedUrl]),
   Client = connect(ParsedUrl),
