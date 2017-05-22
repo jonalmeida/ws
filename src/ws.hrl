@@ -22,6 +22,16 @@
           raw_path :: binary()
          }).
 
+-record(frame, {
+          fin :: boolean(),
+          rsv1 :: boolean(),
+          rsv2 :: boolean(),
+          rsv3 :: boolean(),
+          opcode :: number(),
+          mask=0 :: number(),
+          payload :: binary()
+         }).
+
 -type ws_url() :: #ws_url{}.
 -type client() :: #client{}.
 
