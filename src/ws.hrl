@@ -23,11 +23,11 @@
          }).
 
 -record(frame, {
-          fin :: boolean(),
-          rsv1 :: boolean(),
-          rsv2 :: boolean(),
-          rsv3 :: boolean(),
-          opcode :: number(),
+          fin=true :: boolean(),
+          rsv1=false :: boolean(),
+          rsv2=false :: boolean(),
+          rsv3=false :: boolean(),
+          opcode=close :: atom(),
           mask=0 :: number(),
           payload :: binary()
          }).
