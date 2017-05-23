@@ -4,7 +4,7 @@
 
 -record(ws_url, {
           scheme=?DEFAULT_SCHEME :: string(),
-          host :: atom(),
+          netloc :: atom(),
           user :: atom(),
           password :: atom(),
           port=80 :: number(),
@@ -13,7 +13,7 @@
           raw_path :: binary()}).
 
 -record(client, {
-          host :: atom(),
+          netloc :: atom(),
           path :: atom(),
           port :: number(),
           query :: tuple(),

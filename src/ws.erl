@@ -16,20 +16,20 @@
 %%====================================================================
 -spec connect(string()|atom(), number()) -> client()|net_error().
 connect(Url, Port) ->
-  connect(#ws_url{host=Url, port=Port}).
+  connect(#ws_url{netloc=Url, port=Port}).
 
 -spec connect(string()|atom()|ws_url()) -> client()|net_error().
 connect(Url) when is_list(Url) ->
   connect(list_to_atom(Url));
 connect(Url) when is_atom(Url) ->
   connect(Url, 80, '/', ws_util:a_to_b(Url));
-connect(#ws_url{host=Host, path=Path, port=Port, raw_path=Raw}) ->
-  connect(Host, Port, Path, Raw).
+connect(#ws_url{netloc=Netloc, path=Path, port=Port, raw_path=Raw}) ->
+  connect(Netloc, Port, Path, Raw).
 
-connect(Host, Port, Path, Raw) ->
-  case gen_tcp:connect(Host, Port, ?DEFAULT_OPTIONS) of
+connect(Netloc, Port, Path, Raw) ->
+  case gen_tcp:connect(Netloc, Port, ?DEFAULT_OPTIONS) of
     {ok, Socket} ->
-      #client{host=Host,
+      #client{netloc=Netloc,
               path=Path,
               port=Port,
               socket=Socket,
@@ -54,7 +54,7 @@ request(Url) ->
 -spec request(atom(), string()|atom()) -> binary().
 request(get, Url) ->
   ParsedUrl = ws_url:parse(Url),
-  Headers = ws_header:build([{"Host", atom_to_list(ParsedUrl#ws_url.host)},
+  Headers = ws_header:build([{"Host", atom_to_list(ParsedUrl#ws_url.netloc)},
                              {"GET", atom_to_list(ParsedUrl#ws_url.path)}]),
   SanitizedHeaders = ws_header:sanitize(Headers),
   io:format("~p~n", [ParsedUrl]),

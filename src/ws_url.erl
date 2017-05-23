@@ -33,11 +33,11 @@ split_host_path(#ws_url{scheme=Scheme, raw_path=Raw}=Url) ->
     [Host, PortPath] ->
       case binary:split(PortPath, <<"/">>) of
         [Port] ->
-          Url#ws_url{host=ws_util:b_to_a(Host),
+          Url#ws_url{netloc=ws_util:b_to_a(Host),
                      path='/',
                      port=ws_util:b_to_i(Port)};
         [Port, Path] ->
-          Url#ws_url{host=ws_util:b_to_a(Host),
+          Url#ws_url{netloc=ws_util:b_to_a(Host),
                      path=ws_util:b_to_a(Path),
                      port=ws_util:b_to_i(Port)}
       end
@@ -46,15 +46,15 @@ split_host_path(#ws_url{scheme=Scheme, raw_path=Raw}=Url) ->
 split_path(Raw, Scheme) ->
   case binary:split(Raw, <<"/">>) of
     [Addr] ->
-      #ws_url{host=ws_util:b_to_a(Addr),
+      #ws_url{netloc=ws_util:b_to_a(Addr),
               path='/',
               scheme=Scheme};
     [Addr, <<>>] ->
-      #ws_url{host=ws_util:b_to_a(Addr),
+      #ws_url{netloc=ws_util:b_to_a(Addr),
               path='/',
               scheme=Scheme};
     [Addr, Path] ->
-      #ws_url{host=ws_util:b_to_a(Addr),
+      #ws_url{netloc=ws_util:b_to_a(Addr),
               path=ws_util:b_to_a(Path),
               scheme=Scheme}
   end.
