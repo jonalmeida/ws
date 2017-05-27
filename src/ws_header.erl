@@ -5,7 +5,6 @@
          build/1,
          default_headers/0,
          check_accept/2,
-         rand_bits/1,
          parse/1]).
 
 -include("ws.hrl").
@@ -72,13 +71,7 @@ check_accept(Key, Accept) ->
 
 -spec generate_key() -> binary().
 generate_key() ->
-  base64:encode(rand_bits(128)).
-
--spec rand_bits(non_neg_integer()) -> binary().
-rand_bits(Bits) ->
-  Bytes = (Bits + 7) div 8,
-  <<Result:Bits/bits, _/bits>> = crypto:strong_rand_bytes(Bytes),
-  Result.
+  base64:encode(ws_util:rand_bits(128)).
 
 -spec parse(binary()) -> [{string(), string()}].
 parse(RawHeader) ->
