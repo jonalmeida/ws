@@ -6,6 +6,7 @@
 -export([request/2,
          request/1,
          connect/2,
+         send/2,
          test/0
         ]).
 
@@ -38,8 +39,8 @@ connect(Netloc, Port, Path, Raw) ->
       E
   end.
 
--spec send(client(), binary()|[string()]) -> ok | {error, closed|net_error()}.
-send(Client, Data) ->
+-spec send_header(client(), binary()|[string()]) -> ok | net_error().
+send_header(Client, Data) ->
   case Client#client.socket of
     undefined ->
       {error, "No connection has been made. Try using connect/1 first."};
@@ -59,7 +60,7 @@ request(get, Url) ->
   SanitizedHeaders = ws_header:sanitize(Headers),
   io:format("~p~n", [ParsedUrl]),
   Client = connect(ParsedUrl),
-  case send(Client, SanitizedHeaders) of
+  case send_header(Client, SanitizedHeaders) of
     ok ->
       {ok, RawResp} = gen_tcp:recv(Client#client.socket, 0),
       RespHeaders   = ws_header:parse(RawResp),
@@ -74,6 +75,23 @@ request(get, Url) ->
     E ->
       E
   end.
+
+-spec send(client(), string()|binary()) -> ok | {error, string()}.
+send(Client, Data) when is_list(Data) ->
+  send(Client, text, list_to_binary(Data));
+send(Client, Data) when is_binary(Data) ->
+  gen_tcp:send(Client#client.socket, binary, Data).
+
+-spec send(client(), opcode(), string()|binary()) -> ok | net_error().
+send(Client, Type, Data) ->
+  EncData = ws_frame:encode_payload(Type, Data),
+  case Client#client.socket of
+    undefined ->
+      {error, "No connection has been made. Try using connect/1 first."};
+    Socket ->
+      gen_tcp:send(Socket, EncData)
+  end.
+
 
 test() ->
   request(get, 'ws://localhost:8080').

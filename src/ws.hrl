@@ -35,5 +35,6 @@
 -type ws_url() :: #ws_url{}.
 -type client() :: #client{}.
 
--type net_error() :: inet:posix().
+-type net_error() :: {error, closed|inet:posix()}.
 
+-type opcode() :: 0 | 1 | 2 | 8 | 9 | 10.

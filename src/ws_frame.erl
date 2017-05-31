@@ -3,7 +3,7 @@
          encode_payload/2,
          generate_mask_key/0]).
 
--type opcode() :: 0 | 1 | 2 | 8 | 9 | 10.
+-include("ws.hrl").
 
 %% @doc Creates a xor'd output using the masking key.
 -spec mask(number(), binary(), binary()) -> binary().
