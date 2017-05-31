@@ -3,11 +3,11 @@
 -include("ws.hrl").
 
 %% API exports
--export([connect/1,
-         test/0,
+-export([request/2,
+         request/1,
          connect/2,
-         request/2,
-         request/1]).
+         test/0
+        ]).
 
 -define(DEFAULT_OPTIONS, [binary, {active, false}, {packet, raw}]).
 
