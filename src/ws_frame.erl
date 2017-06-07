@@ -1,6 +1,6 @@
 -module(ws_frame).
 -export([mask/3,
-         encode_payload/2,
+         encode_payload/1,
          generate_mask_key/0]).
 
 -include("ws.hrl").
@@ -35,8 +35,8 @@ generate_mask_key() ->
 
 %% @doc Formats the binary payload with a new generated masking key,
 %%      while also setting the correct opcode.
--spec encode_payload(opcode(), binary()) -> binary().
-encode_payload(Type, Payload) ->
+-spec encode_payload({opcode(), binary()}|opcode()) -> binary().
+encode_payload({Type, Payload}) ->
   MaskingKeyBin     = generate_mask_key(),
   <<MaskingKey:32>> = MaskingKeyBin,
   OpCode        = atom_to_opcode(Type),
@@ -45,7 +45,9 @@ encode_payload(Type, Payload) ->
   <<1:1, 0:3, OpCode:4, 1:1,  % Fin, Op1, Op2, Op3, Mask
     PayloadBitLen/bits,       % Payload length
     MaskingKeyBin/bits,       % Masking key
-    MaskedPayload/binary>>.   % Masked payload
+    MaskedPayload/binary>>;   % Masked payload
+encode_payload(Type) when is_atom(Type) ->
+  encode_payload({Type, <<>>}).
 
 %% @doc Creates correctly padded payload len in binary format dependant
 %%      on the value.
