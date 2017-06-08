@@ -1,6 +1,7 @@
 -module(ws_frame).
 -export([mask/3,
          encode_payload/1,
+         decode_payload/1,
          generate_mask_key/0]).
 
 -include("ws.hrl").
@@ -48,6 +49,11 @@ encode_payload({Type, Payload}) ->
     MaskedPayload/binary>>;   % Masked payload
 encode_payload(Type) when is_atom(Type) ->
   encode_payload({Type, <<>>}).
+
+-spec decode_payload(binary()) -> string()|binary().
+decode_payload(<<_Fin:1, _Rsv:3, Opcode:4, _Mask:1, _Len:7, Rest/bits>>) ->
+  Op = opcode_to_atom(Opcode),
+  {Op, Rest}.
 
 %% @doc Creates correctly padded payload len in binary format dependant
 %%      on the value.
