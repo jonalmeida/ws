@@ -1,28 +1,28 @@
 -module(ws_header).
 -export([get_header/1,
-         get_header/2,
-         sanitize/1,
-         build/1,
-         default_headers/0,
-         check_accept/2,
-         parse/1]).
+  get_header/2,
+  sanitize/1,
+  build/1,
+  default_headers/0,
+  check_accept/2,
+  parse/1]).
 
 -include("ws.hrl").
 
 -spec build([{string(), string()}]) -> [string()].
 build(L) ->
   lists:append(default_headers(), L).
-  %Sanitized = sanitize_header(Full),
-  %lists:flatten(Sanitized, ["\r\n"]). % Trailing '\r\n' as per RFC 2616 spec
+%Sanitized = sanitize_header(Full),
+%lists:flatten(Sanitized, ["\r\n"]). % Trailing '\r\n' as per RFC 2616 spec
 
 -spec default_headers() -> [{string(), string()}].
 default_headers() ->
   [get_header(connection),
-   get_header(version),
-   get_header(upgrade),
-   get_header(protocol),
-   get_header(key),
-   get_header(extensions)].
+    get_header(version),
+    get_header(upgrade),
+    get_header(protocol),
+    get_header(key),
+    get_header(extensions)].
 
 -spec sanitize([{string(), string()}]) -> [string()].
 sanitize(L) ->
@@ -31,10 +31,10 @@ sanitize(L) ->
 -spec sanitize_header([{string(), string()}], [string()], [string()]) -> [string()].
 sanitize_header([], Ys, Get) ->
   lists:append([Get, Ys, ["\r\n"]]);
-sanitize_header([{"GET", V}|KVs], Ys, _Get) ->
+sanitize_header([{"GET", V} | KVs], Ys, _Get) ->
   sanitize_header(KVs, Ys, ["GET ", V, " HTTP/1.1\r\n"]);
-sanitize_header([{K, V}|KVs], Ys, Get) ->
-  sanitize_header(KVs, [K, ": ", V, "\r\n"|Ys], Get).
+sanitize_header([{K, V} | KVs], Ys, Get) ->
+  sanitize_header(KVs, [K, ": ", V, "\r\n" | Ys], Get).
 
 -spec get_header(atom()) -> {string(), string()}.
 get_header(connection) ->
@@ -65,7 +65,7 @@ get_header(Headers, Key) ->
 
 -spec check_accept(string(), string()) -> boolean().
 check_accept(Key, Accept) ->
-  Encoded = crypto:hash(sha, Key++?WS_GUID),
+  Encoded = crypto:hash(sha, Key ++ ?WS_GUID),
   Hashed = base64:encode(Encoded),
   Accept =:= binary_to_list(Hashed).
 
@@ -83,10 +83,10 @@ parse([], ParsedHeaders) ->
 parse(RawHeader, ParsedHeaders) ->
   case binary:split(RawHeader, <<"\r\n">>) of
     [Header, <<"\r\n">>] ->
-      [parse_header(Header)|ParsedHeaders];
+      [parse_header(Header) | ParsedHeaders];
     [Header, Next] ->
       Parsed = parse_header(Header),
-      parse(Next, [Parsed|ParsedHeaders])
+      parse(Next, [Parsed | ParsedHeaders])
   end.
 
 -spec parse_header(binary()) -> {string(), string()}.

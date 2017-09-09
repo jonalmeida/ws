@@ -1,18 +1,18 @@
 -module(ws_frame).
 -export([mask/3,
-         encode_payload/1,
-         decode_payload/1,
-         generate_mask_key/0]).
+  encode_payload/1,
+  decode_payload/1,
+  generate_mask_key/0]).
 
 -include("ws.hrl").
 
 %% @doc Creates a xor'd output using the masking key.
 -spec mask(number(), binary(), binary()) -> binary().
-mask(Key,Data,Accu) ->
+mask(Key, Data, Accu) ->
   case Data of
     <<A:32, Rest/binary>> ->
       C = binary:encode_unsigned(A bxor Key),
-      mask(Key,Rest,<<Accu/binary, C/binary>>);
+      mask(Key, Rest, <<Accu/binary, C/binary>>);
     <<A:24>> ->
       <<B:24, _:8>> = binary:encode_unsigned(Key),
       C = binary:encode_unsigned(A bxor B),
@@ -38,9 +38,9 @@ generate_mask_key() ->
 %%      while also setting the correct opcode.
 -spec encode_payload({opcode(), binary()}|opcode()) -> binary().
 encode_payload({Type, Payload}) ->
-  MaskingKeyBin     = generate_mask_key(),
+  MaskingKeyBin = generate_mask_key(),
   <<MaskingKey:32>> = MaskingKeyBin,
-  OpCode        = atom_to_opcode(Type),
+  OpCode = atom_to_opcode(Type),
   PayloadBitLen = payload_length_to_binary(iolist_size(Payload)),
   MaskedPayload = mask(MaskingKey, Payload, <<>>),
   <<1:1, 0:3, OpCode:4, 1:1,  % Fin, Op1, Op2, Op3, Mask
@@ -50,20 +50,29 @@ encode_payload({Type, Payload}) ->
 encode_payload(Type) when is_atom(Type) ->
   encode_payload({Type, <<>>}).
 
+%% @doc Unpacks the masked packet and gives a tuple with the type
+%%      and message.
 -spec decode_payload(binary()) -> string()|binary().
 decode_payload(<<_Fin:1, _Rsv:3, Opcode:4, _Mask:1, _Len:7, Rest/bits>>) ->
   Op = opcode_to_atom(Opcode),
-  {Op, Rest}.
+  case Op of
+    text ->
+      {Op, binary_to_list(Rest)};
+    pong ->
+      {Op, ok};
+    Other ->
+      {Other, Rest}
+  end.
 
 %% @doc Creates correctly padded payload len in binary format dependant
 %%      on the value.
 -spec payload_length_to_binary(number()) -> binary().
-payload_length_to_binary(Len) when Len =<125 ->
-  << Len:7 >>;
+payload_length_to_binary(Len) when Len =< 125 ->
+  <<Len:7>>;
 payload_length_to_binary(Len) when Len =< 16#ffff ->
-  << 126:7, Len:16 >>;
+  <<126:7, Len:16>>;
 payload_length_to_binary(Len) when Len =< 16#7fffffffffffffff ->
-  << 127:7, Len:64 >>.
+  <<127:7, Len:64>>.
 
 %% @doc Converts an atom to the appropriate opcode (as per spec).
 -spec atom_to_opcode(atom()) -> opcode().
