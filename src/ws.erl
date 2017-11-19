@@ -4,10 +4,11 @@
 
 %% API exports
 -export([connect/2, %TODO: Remove later
-  connect/1, %TODO: Remove later
+  connect/1,
   connect_host/2, %TODO: Remove later
   send/3,
   send/2,
+  decode/1,
   close/1,
   ping/1,
   test/0
@@ -81,6 +82,10 @@ send_type(Client, Type) ->
     Socket ->
       gen_tcp:send(Socket, EncPayload)
   end.
+
+-spec decode({atom(), number(), binary()}) -> {atom(), string()|binary()}.
+decode({tcp, _Port, BinData}) when is_binary(BinData) ->
+  ws_frame:decode_payload(BinData).
 
 test() ->
   connect(get, 'ws://localhost:8080').
