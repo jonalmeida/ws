@@ -8,7 +8,7 @@
   connect_host/2, %TODO: Remove later
   send/3,
   send/2,
-  decode/1,
+  recv/1,
   close/1,
   ping/1,
   test/0
@@ -83,9 +83,14 @@ send_type(Client, Type) ->
       gen_tcp:send(Socket, EncPayload)
   end.
 
--spec decode({atom(), number(), binary()}) -> {atom(), string()|binary()}.
-decode({tcp, _Port, BinData}) when is_binary(BinData) ->
-  ws_frame:decode_payload(BinData).
+-spec recv(client()) -> {atom(), string()|binary()}.
+recv(#client{socket = _Socket}) ->
+  receive
+    {tcp, _Socket, Data} ->
+      decode(Data);
+    _ ->
+      ok
+  end.
 
 test() ->
   connect(get, 'ws://localhost:8080').
@@ -93,6 +98,11 @@ test() ->
 %%====================================================================
 %% Internal functions
 %%====================================================================
+
+-spec decode(binary()) -> {atom(), string()|binary()}.
+decode(BinData) when is_binary(BinData) ->
+  ws_frame:decode_payload(BinData).
+
 -spec connect_host(string()|atom(), number()) -> client()|net_error().
 connect_host(Url, Port) ->
   connect_host(#ws_url{netloc = Url, port = Port}).
