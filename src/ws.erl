@@ -90,6 +90,8 @@ recv(#client{socket = _Socket}) ->
       decode(Data);
     _ ->
       ok
+  after 700 ->
+    timeout
   end.
 
 test() ->
